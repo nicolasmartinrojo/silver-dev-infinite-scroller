@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import HouseComponent from "./components/HouseComponent";
 
 export default function Home() {
   //   const [houses, setHouses] = useState<Promise<House[]>>([]);
@@ -22,7 +23,7 @@ export default function Home() {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteQuery({
       // @todo: que es esto?
-      queryKey: ["posts"],
+      queryKey: ["houses"],
       initialPageParam: 1,
       // No debería fallar a nivel https pero por las dudas se setean los 2 sig parametros
       retry: 3,
@@ -70,9 +71,11 @@ export default function Home() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
   return (
     <div style={{ padding: 20 }}>
-      <h1>Posts</h1>
+      <h1>Houses</h1>
       {data?.pages.map((page) =>
-        page.houses?.map((post) => <div key={post.id}>{post.address}</div>),
+        page.houses?.map((post) => (
+          <HouseComponent key={post.id} {...post}></HouseComponent>
+        )),
       )}
 
       {/* Este div dispara el infinite scroll */}
@@ -82,7 +85,6 @@ export default function Home() {
       />
 
       {isFetchingNextPage && <p>Cargando más...</p>}
-      {!hasNextPage && <p>No hay más datos</p>}
     </div>
     // <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
     //   <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
