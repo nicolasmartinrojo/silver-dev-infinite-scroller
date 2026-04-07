@@ -1,5 +1,4 @@
 import Button from "@mui/material/Button";
-import { ArrowUpIcon } from "lucide-react";
 
 export default function HouseComponent(props: House) {
   return (
@@ -40,14 +39,8 @@ export default function HouseComponent(props: House) {
         </div>
 
         <div className="flex flex-col items-stretch justify-center gap-3 sm:items-end">
-          <Button variant="contained" size="medium" className="min-w-[140px]">
-            Contactar
-          </Button>
           <Button variant="outlined" size="medium" className="min-w-[140px]">
             Ver detalles
-          </Button>
-          <Button variant="outlined" size="medium" endIcon={<ArrowUpIcon />}>
-            Enviar
           </Button>
         </div>
       </div>
