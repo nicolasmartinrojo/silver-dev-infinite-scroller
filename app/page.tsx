@@ -1,18 +1,34 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import HouseComponent from "./components/HouseComponent";
 
+const DISMISSED_HOUSES_KEY = "dismissed-house-ids";
+
 export default function Home() {
-  // Este ref apunta a un div invisible al final de la lista
+  const [dismissedIds, setDismissedIds] = useState<number[]>([]);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
-  // Acá vive toda la lógica de datos
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem(DISMISSED_HOUSES_KEY);
+    if (!stored) return;
+
+    const parsed = JSON.parse(stored) as number[];
+    setDismissedIds(Array.isArray(parsed) ? parsed : []);
+  }, []);
+
+  const handleDismiss = (id: number) => {
+    setDismissedIds((current) => {
+      const next = Array.from(new Set([...current, id]));
+      window.localStorage.setItem(DISMISSED_HOUSES_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteQuery({
-      // @todo: que es esto?
       queryKey: ["houses"],
       initialPageParam: 1,
-      // No debería fallar a nivel https pero por las dudas se setean los 2 sig parametros
       retry: 3,
       retryDelay: 1000,
       queryFn: async ({ pageParam }) => {
@@ -23,14 +39,12 @@ export default function Home() {
         const data = (await res.json()) as HouseResponse;
 
         if (!data.ok) {
-          // @todo: aca tirar error de que falló la api pero reintentamos como un champion
           throw new Error("Force fail: API error");
         } else {
           return data;
         }
       },
 
-      // Le dice a TanStack cómo saber la siguiente página
       getNextPageParam: (lastPage, allPages) => {
         if (lastPage.ok) {
           return allPages.length + 1;
@@ -60,12 +74,13 @@ export default function Home() {
     <div style={{ padding: 20 }}>
       <h1>Houses</h1>
       {data?.pages.map((page) =>
-        page.houses?.map((post) => (
-          <HouseComponent key={post.id} {...post}></HouseComponent>
-        )),
+        page.houses
+          ?.filter((post) => !dismissedIds.includes(post.id))
+          .map((post) => (
+            <HouseComponent key={post.id} {...post} onDismiss={handleDismiss} />
+          )),
       )}
 
-      {/* Este div dispara el infinite scroll */}
       <div
         ref={loadMoreRef}
         style={{ height: 20, color: "red", border: "1px solid black" }}
